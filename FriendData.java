@@ -45,11 +45,11 @@ public class FriendData {
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
 		Job job = Job.getInstance(conf, "friend data");
-		job.setJarByClass(WordCount.class);
-		job.setMapperClass(TokenizerMapper.class);
-		job.setCombinerClass(IntSumReducer.class);
-		job.setReducerClass(IntSumReducer.class);
-		job.setOutputKeyClass(Text.class);
+		job.setJarByClass(FriendData.class);
+		job.setMapperClass(MapperUser.class);
+		job.setCombinerClass(ReduceUser.class);
+		job.setReducerClass(ReduceUser.class);
+		job.setOutputKeyClass(IntWritable.class);
 		job.setOutputValueClass(IntWritable.class);
 		FileInputFormat.addInputPath(job, new Path(args[0]));
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));
