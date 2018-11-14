@@ -12,50 +12,8 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class TriangleCount {
-	/*public static void equal(String name1, String name2) {
-		return (name1.compareTo(name2) == 0);
-	}
-	public static void greater_than(String name1, String name2) {
-		return (name1.compareTo(name2) > 0);
-	}
-	public static void less_than(String name1, String name2) {
-		return (name1.compareTo(name2) < 0);
-	}
-	public static void read_file(String filename) {
-		try {
-			fr = new FileReader("file.txt");
-			br = new BufferedReader(fr);
-			String line;
-			String username;
-			String follower;
-			while ((line = br.readLine()) != null) {
-				String[] lineDetail = line.split("\\t",2);
-				lineDetail[0]
-				// process the line
-				System.out.println(line);
-			}
-		} catch (FileNotFoundException e) {
-			System.err.println("Can not find specified file!");
-			e.printStackTrace();
-		} catch (IOException e) {
-			System.err.println("Can not read from file!");
-			e.printStackTrace();
-		} finally {
-			if (br != null) try { br.close(); } catch (IOException e) { /* ensure close */ //}
-			//if (fr != null) try { fr.close(); } catch (IOException e) { /* ensure close */ }
-		//}
-	//}
-	/*public static class Relationship {
-		private String username;
-		private String follower;
-
-		public Relationship(String inputUsername, String inputFollower) {
-			username = inputUsername;
-			follower = inputFollower;
-		}
-	}*/
 	public static class TokenizerMapper
-	extends Mapper<Object, Text, IntWritable, IntWritable> {
+	extends Mapper<IntWritable[], IntWritable, IntWritable, IntWritable> {
 		private IntWritable username = new IntWritable();
 		private IntWritable follower = new IntWritable();
 		private ArrayList<Integer> alreadyProcessed = new ArrayList<Integer>();
@@ -68,12 +26,17 @@ public class TriangleCount {
 			return (alreadyProcessed.get(i).compareTo(follower) != 0);
 		}
 
-		public void map(Object key, Text value, Context context
+		public void map(Iterable<IntWritable> keys, IntWritable value, Context context
 		) throws IOException, InterruptedException {
 			alreadyProcessed.size();
-			StringTokenizer itr = new StringTokenizer(value.toString());
-			int count = 0;
-			while (itr.hasMoreTokens()) {
+			//StringTokenizer itr = new StringTokenizer(value.toString());
+			//int count = 0;
+			for (IntWritable key : keys) {
+				if (follower.compareTo(username) > 0) {
+					context.write(username, follower);
+				}
+			}
+			/*while (itr.hasMoreTokens()) {
 				if (count == 0) {
 					username.set(itr.nextToken());
 				} else if (count == 1) {
@@ -93,12 +56,12 @@ public class TriangleCount {
 				} else {
 					count = count + 1;
 				}
-			}
+			}*/
 		}
 	}
 
-	/*public static class Pair extends ArrayWritable {
-		public Pair(IntWritable[] values) {
+	/*public static class IntArrayWritable extends ArrayWritable {
+		public IntArrayWritable(IntWritable[] values) {
 			super(IntWritable.class, values);
 		}
 
@@ -111,88 +74,119 @@ public class TriangleCount {
 	public static class TripletReducer
 	extends Reducer<IntWritable,IntWritable,IntWritable,IntWritable[]> {
 		private IntWritable[] pair = new IntWritable()[2];
-		private IntWritable username = new IntWritable();
-		//private Pair[] triplets
+		private IntWritable empty = new IntWritable(-1);
+		private List<IntWritable> allConnected = new ArrayList<>();
 
 		public void reduce(IntWritable key, Iterable<IntWritable> values,
 		Context context
 		) throws IOException, InterruptedException {
-			int count = 0;
 			for (IntWritable val : values) {
-				if (count == 0) {
-					pair[0].set(val.get());
-				} else {
-					pair[1].set(val.get());
-					context.write(key, pair);
-					count = 0;
-				}
-				count = count + 1;
-				//sum += val.get();
+				allConnected.add(val);
 			}
-			//result.set(sum);
-			//context.write(key, result);
+			if (allConnected.size() > 1) {
+				for (int i = 0; i < allConnected.size(); i++) {
+					for (int j = 0; j < allConnected.size(); j++) {
+						pair[0].set(allConnected.get(i));
+						pair[1].set(allConnected.get(j));
+						context.write(key, pair);
+					}
+				}
+			} else if (allConnected.size() == 1) {
+				pair[0].set(allConnected.get(0));
+				pair[1].set(key);
+				context.write(empty, pair);
+			}
+			/*int count = 0;
+			for (IntWritable val : values) {
+				for (IntWritable checkedVal : values) {
+					if (checkedVal.compareTo(val) != 0) {
+						pair[0].set(val.get());
+						pair[1].set(checkedVal.get());
+						context.write(key, pair);
+					}
+				}
+			}*/
 		}
 	}
 
 	public static class SwapMapper
 	extends Mapper<IntWritable, IntWritable[], IntWritable[], IntWritable> {
-		private IntWritable[] pair = new IntWritable()[2];
-		private IntWritable tripletMaster = new IntWritable();
+		private IntWritable empty = new IntWritable(-1);
 
-		public void map(IntWritable key, Iterable<IntWritable> value, Context context
+		public void map(IntWritable key, Iterable<IntWritable> values, Context context
 		) throws IOException, InterruptedException {
-			context.write(value, key);
+			for (IntWritable val : values) {
+				if (empty.compareTo(key) == 0) {
+					context.write(values, empty);
+				} else {
+					context.write(values, key);
+				}
+			}
 		}
 	}
 
-	public static class SwapMapperQuestion
-	extends Mapper<IntWritable, IntWritable, IntWritable[], IntWritable> {
-		private IntWritable[] pair = new IntWritable()[2];
-		private IntWritable question = new IntWritable(-1);
+	public static class TriangleReducer
+	extends Reducer<IntWritable[],IntWritable,IntWritable,IntWritable> {
+		private IntWritable one = new IntWritable(1);
+		private IntWritable empty = new IntWritable(-1);
 
-		public void map(IntWritable key, IntWritable value, Context context
+		public void reduce(Iterable<IntWritable> keys, IntWritable value,
+		Context context
 		) throws IOException, InterruptedException {
-			pair[0] = key;
-			pair[1] = value;
-			context.write(pair, question);
+			if (empty.compareTo(value)) {
+				for (IntWritable key : keys) {
+					context.write(key, one);
+				}
+			}
 		}
 	}
 
-	public static class TripletReducer
-	extends Reducer<IntWritable,IntWritable,IntWritable,IntWritable[]> {
-		private IntWritable[] pair = new IntWritable()[2];
-		private IntWritable username = new IntWritable();
-		//private Pair[] triplets
+	public static class NothingMap
+	extends Reducer<IntWritable,IntWritable,IntWritable,IntWritable> {
+		private IntWritable result = new IntWritable();
 
 		public void reduce(IntWritable key, Iterable<IntWritable> values,
 		Context context
 		) throws IOException, InterruptedException {
-			int count = 0;
+			context.write(key, values);
+		}
+	}
+
+	public static class IntSumReducer
+	extends Reducer<IntWritable,IntWritable,IntWritable,IntWritable> {
+		private IntWritable result = new IntWritable();
+
+		public void reduce(IntWritable key, Iterable<IntWritable> values,
+		Context context
+		) throws IOException, InterruptedException {
+			int sum = 0;
 			for (IntWritable val : values) {
-				if (count == 0) {
-					pair[0].set(val.get());
-				} else {
-					pair[1].set(val.get());
-					context.write(key, pair);
-					count = 0;
-				}
-				count = count + 1;
-				//sum += val.get();
+				sum += val.get();
 			}
-			//result.set(sum);
-			//context.write(key, result);
+			result.set(sum);
+			context.write(key, result);
 		}
 	}
 
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
-		Job job = Job.getInstance(conf, "word count");
-		job.setJarByClass(WordCount.class);
+		Job job = Job.getInstance(conf, "triangle count");
+		job.setJarByClass(TriangleCount.class);
 		job.setMapperClass(TokenizerMapper.class);
+		job.setCombinerClass(TripletReducer.class);
+		job.setReducerClass(TripletReducer.class);
+
+		job.setMapperClass(SwapMapper.class);
+		job.setCombinerClass(TriangleReducer.class);
+		job.setReducerClass(TriangleReducer.class);
+
+		job.setMapperClass(NothingMap.class);
 		job.setCombinerClass(IntSumReducer.class);
 		job.setReducerClass(IntSumReducer.class);
-		job.setOutputKeyClass(Text.class);
+
+		job.setOutputKeyClass(IntWritable.class);
 		job.setOutputValueClass(IntWritable.class);
+
 		FileInputFormat.addInputPath(job, new Path(args[0]));
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
