@@ -1,5 +1,7 @@
 import java.io.IOException;
 import java.util.StringTokenizer;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -24,20 +26,28 @@ public class FriendData {
                 username = new IntWritable(Integer.parseInt(iteration.nextToken()));
                 follower = new IntWritable(Integer.parseInt(iteration.nextToken()));
                 if (username.compareTo(follower) < 0) {
-                    context.write(username,password);
-                }
+                    context.write(username,follower);
+                } else {
+					context.write(follower,username);
+				}
             }
 		}
 	}
 
 	public static class ReduceUser
-	extends Reducer<IntWritable,IntWritable,IntWritable,IntWritable[]> {
+	extends Reducer<IntWritable,IntWritable,IntWritable,IntWritable> {
 		
 		public void reduce(IntWritable key, Iterable<IntWritable> values,
 		Context context
 		) throws IOException, InterruptedException {			
+			List<Integer> followers = new ArrayList<Integer>();			
 			for (IntWritable val : values) {
-                context.write(key,val);
+                if (!followers.contains(val)) {
+					followers.add(val);
+				}
+			}
+			for (Integer foll : followers) {
+				context.write(key, foll);
 			}			
 		}
 	}
