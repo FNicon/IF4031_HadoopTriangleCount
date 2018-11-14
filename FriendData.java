@@ -40,14 +40,17 @@ public class FriendData {
 		public void reduce(IntWritable key, Iterable<IntWritable> values,
 		Context context
 		) throws IOException, InterruptedException {			
-			List<Integer> followers = new ArrayList<Integer>();			
+			List<Integer> followers = new ArrayList<Integer>();		
+			IntWritable value;	
 			for (IntWritable val : values) {
                 if (!followers.contains(val)) {
 					followers.add(val);
 				}
 			}
+			
 			for (Integer foll : followers) {
-				context.write(key, foll);
+				value = new IntWritable(foll);
+				context.write(key, value);
 			}			
 		}
 	}
