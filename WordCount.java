@@ -15,6 +15,7 @@ public class WordCount {
 	public static class TokenizerMapper
 	extends Mapper<Object, Text, Text, IntWritable> {
 		private final static IntWritable one = new IntWritable(1);
+		private IntWritable countValue = new IntWritable();
 		private Text word = new Text();
 
 		public void map(Object key, Text value, Context context
@@ -22,7 +23,10 @@ public class WordCount {
 			StringTokenizer itr = new StringTokenizer(value.toString());
 			while (itr.hasMoreTokens()) {
 				word.set(itr.nextToken());
-				context.write(word, one);
+				if (itr.hasMoreTokens()) {
+					countValue.set(itr.nextToken());
+					context.write(word, countValue);
+				}
 			}
 		}
 	}
