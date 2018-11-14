@@ -19,7 +19,7 @@ public class FriendData {
 		
 		public void map(Object key, Text value, Context context
 		) throws IOException, InterruptedException {
-			StringTokenizer iteration = new StringTokenizer(value.toString()," ");
+			StringTokenizer iteration = new StringTokenizer(value.toString(),"\t\n");
             while (iteration.hasMoreTokens()) { 
                 username = new IntWritable(Integer.parseInt(iteration.nextToken()));
                 follower = new IntWritable(Integer.parseInt(iteration.nextToken()));
