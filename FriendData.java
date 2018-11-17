@@ -2,10 +2,11 @@ import java.io.IOException;
 import java.util.StringTokenizer;
 import java.util.ArrayList;
 import java.util.List;
+import java.lang.Long;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -16,54 +17,58 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 public class FriendData {
 	
 	public static class MapperUser
-	extends Mapper<Object, Text, IntWritable, IntWritable> {
-		private IntWritable username , follower;
+	extends Mapper<Object, Text, LongWritable, LongWritable> {
+		private LongWritable username = new LongWritable();
+		private LongWritable follower = new LongWritable();
 		
 		public void map(Object key, Text value, Context context
 		) throws IOException, InterruptedException {
-			StringTokenizer iteration = new StringTokenizer(value.toString(),"\t\n");
-            while (iteration.hasMoreTokens()) { 
-                username = new IntWritable(Integer.parseInt(iteration.nextToken()));
-                follower = new IntWritable(Integer.parseInt(iteration.nextToken()));
-                if (username.compareTo(follower) < 0) {
-                    context.write(username,follower);
-                } else {
+			StringTokenizer iteration = new StringTokenizer(value.toString());
+		while (iteration.hasMoreTokens()) {
+			username.set(Long.parseLong(iteration.nextToken()));
+			follower.set(Long.parseLong(iteration.nextToken()));
+			if (username.compareTo(follower) < 0) {
+					context.write(username,follower);
+				} else {
 					context.write(follower,username);
 				}
-            }
+			}
 		}
 	}
 
 	public static class ReduceUser
-	extends Reducer<IntWritable,IntWritable,IntWritable,IntWritable> {
+	extends Reducer<LongWritable,LongWritable,LongWritable,LongWritable> {
 		
-		public void reduce(IntWritable key, Iterable<IntWritable> values,
+		public void reduce(LongWritable key, Iterable<LongWritable> values,
 		Context context
-		) throws IOException, InterruptedException {			
-			List<Integer> followers = new ArrayList<Integer>();		
-			IntWritable value;	
-			for (IntWritable val : values) {
-                if (!followers.contains(val)) {
+		) throws IOException, InterruptedException {
+			ArrayList<LongWritable> followers = new ArrayList<LongWritable>();
+			//LongWritable value = new LongWritable();
+
+			for (LongWritable val : values) {
+				if (!followers.contains(val)) {
 					followers.add(val);
 				}
 			}
 			
-			for (Integer foll : followers) {
-				value = new IntWritable(foll);
-				context.write(key, value);
-			}			
+			for (LongWritable foll : followers) {
+				//value.set(foll);
+				context.write(key, foll);
+			}
 		}
 	}
 
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
-		Job job = Job.getInstance(conf, "friend data");
+		Job job = Job.getInstance(conf, "13515029 friend data");
 		job.setJarByClass(FriendData.class);
 		job.setMapperClass(MapperUser.class);
 		job.setCombinerClass(ReduceUser.class);
 		job.setReducerClass(ReduceUser.class);
-		job.setOutputKeyClass(IntWritable.class);
-		job.setOutputValueClass(IntWritable.class);
+
+		job.setOutputKeyClass(LongWritable.class);
+		job.setOutputValueClass(LongWritable.class);
+
 		FileInputFormat.addInputPath(job, new Path(args[0]));
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));
 		System.exit(job.waitForCompletion(true) ? 0 : 1);

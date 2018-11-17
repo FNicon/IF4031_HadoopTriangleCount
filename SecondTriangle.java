@@ -1,10 +1,13 @@
 import java.io.IOException;
 import java.util.StringTokenizer;
+import java.util.ArrayList;
+import java.util.List;
+import java.lang.Long;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
@@ -16,22 +19,22 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class SecondTriangle {
 	public static class TokenizerMapper
-	extends Mapper<Object, Text, IntWritable[], IntWritable> {
-		private IntWritable[] pair = new IntWritable()[2];
-		private IntWritable username = new IntWritable();
-		private IntWritable follower = new IntWritable();
-		private IntWritable empty = new IntWritable(-1);
+	extends Mapper<Object, Text, LongWritable[], LongWritable> {
+		private LongWritable[] pair = new LongWritable()[2];
+		private LongWritable username = new LongWritable();
+		private LongWritable follower = new LongWritable();
+		private LongWritable empty = new LongWritable(-1);
 
 		public void map(Object key, Text value, Context context
 		) throws IOException, InterruptedException {
 			StringTokenizer itr = new StringTokenizer(value.toString());
 			while (itr.hasMoreTokens()) {
-				username.set(itr.nextToken());
+				username.set(Long.parseLong(itr.nextToken()));
 				if (itr.hasMoreTokens()) {
-					follower.set(itr.nextToken());
+					follower.set(Long.parseLong(itr.nextToken()));
 					//if (follower.compareTo(username) > 0) {
-					pair[0].set(username)
-					pair[1].set(follower)
+					pair[0].set(username.get())
+					pair[1].set(follower.get())
 					context.write(pair, empty);
 					//}
 				}
@@ -40,28 +43,28 @@ public class SecondTriangle {
 	}
 
 	public static class TokenizerMapperTriplet
-	extends Mapper<Object, Text, IntWritable[], IntWritable> {
-		private IntWritable[] pair = new IntWritable()[2];
-		private IntWritable username = new IntWritable();
-		private IntWritable follower1 = new IntWritable();
-		private IntWritable follower2 = new IntWritable();
+	extends Mapper<Object, Text, LongWritable[], LongWritable> {
+		private LongWritable[] pair = new LongWritable()[2];
+		private LongWritable username = new LongWritable();
+		private LongWritable follower1 = new LongWritable();
+		private LongWritable follower2 = new LongWritable();
 
 		public void map(Object key, Text value, Context context
 		) throws IOException, InterruptedException {
 			StringTokenizer itr = new StringTokenizer(value.toString());
 			while (itr.hasMoreTokens()) {
-				username.set(itr.nextToken());
+				username.set(Long.parseLong(itr.nextToken()));
 				if (itr.hasMoreTokens()) {
-					follower1.set(itr.nextToken());
+					follower1.set(Long.parseLong(itr.nextToken()));
 					if (itr.hasMoreTokens()) {
-						follower2.set(itr.nextToken());
-						if (follower2.compareTo(follower1) > 0) {
-							pair[0].set(follower1)
-							pair[1].set(follower2)
-						} else {
+						follower2.set(Long.parseLong(itr.nextToken()));
+						//if (follower2.compareTo(follower1) > 0) {
+						pair[0].set(follower1.get())
+						pair[1].set(follower2.get())
+						/*} else {
 							pair[0].set(follower2)
 							pair[1].set(follower1)
-						}
+						}*/
 						context.write(pair, username);
 					}
 				}
@@ -70,17 +73,17 @@ public class SecondTriangle {
 	}
 
 	public static class TriangleReducer
-	extends Reducer<IntWritable[],IntWritable,IntWritable,IntWritable> {
-		//private IntWritable[] pair = new IntWritable()[2];
-		private IntWritable empty = new IntWritable(-1);
-		private IntWritable one = new IntWritable(1);
-		private List<IntWritable> allValues = new ArrayList<IntWritable>();
+	extends Reducer<LongWritable[],LongWritable,LongWritable,LongWritable> {
+		//private LongWritable[] pair = new LongWritable()[2];
+		private LongWritable empty = new LongWritable(-1);
+		private LongWritable one = new LongWritable(1);
+		private ArrayList<LongWritable> allValues = new ArrayList<LongWritable>();
 
-		public void reduce(IntWritable[] key, Iterable<IntWritable> values, Context context
+		public void reduce(LongWritable[] key, Iterable<LongWritable> values, Context context
 		) throws IOException, InterruptedException {
-			boolean isTriangle;
+			boolean isTriangle = false;
 			
-			for (IntWritable val : values) {
+			for (LongWritable val : values) {
 				if (val.compareTo(empty)==0) {
 					isTriangle = true;
 				} else {
@@ -97,7 +100,7 @@ public class SecondTriangle {
 
 	public static void main(String[] args) throws Exception {
 		JobConf conf = new JobConf(new Configuration(), SecondTriangle.class);
-		conf.setJobName("second Triangle");
+		conf.setJobName("13515029 second Triangle");
 		conf.setJarByClass(SecondTriangle.class);
 		FileSystem fs = FileSystem.get(conf);
 
@@ -105,8 +108,8 @@ public class SecondTriangle {
 		MultipleInputs.addInputPath(conf, new Path(args[1]), TextInputFormat.class, TokenizerMapperTriplet.class);
 		conf.setReducerClass(TriangleReducer.class);
 
-		conf.setOutputKeyClass(IntWritable.class); 
-		conf.setOutputValueClass(IntWritable.class);
+		conf.setOutputKeyClass(LongWritable.class); 
+		conf.setOutputValueClass(LongWritable.class);
 
 		if (fs.exists(new Path(args[2]))) {
 			fs.delete(new Path(args[2]), true);
