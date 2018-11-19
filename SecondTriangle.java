@@ -14,13 +14,14 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class SecondTriangle {
 	public static class TokenizerMapper
 	extends Mapper<Object, Text, LongWritable[], LongWritable> {
-		private LongWritable[] pair = new LongWritable()[2];
+		private LongWritable[] pair = new LongWritable[2];
 		private LongWritable username = new LongWritable();
 		private LongWritable follower = new LongWritable();
 		private LongWritable empty = new LongWritable(-1);
@@ -33,8 +34,8 @@ public class SecondTriangle {
 				if (itr.hasMoreTokens()) {
 					follower.set(Long.parseLong(itr.nextToken()));
 					//if (follower.compareTo(username) > 0) {
-					pair[0].set(username.get())
-					pair[1].set(follower.get())
+					pair[0].set(username.get());
+					pair[1].set(follower.get());
 					context.write(pair, empty);
 					//}
 				}
@@ -44,7 +45,7 @@ public class SecondTriangle {
 
 	public static class TokenizerMapperTriplet
 	extends Mapper<Object, Text, LongWritable[], LongWritable> {
-		private LongWritable[] pair = new LongWritable()[2];
+		private LongWritable[] pair = new LongWritable[2];
 		private LongWritable username = new LongWritable();
 		private LongWritable follower1 = new LongWritable();
 		private LongWritable follower2 = new LongWritable();
@@ -59,8 +60,8 @@ public class SecondTriangle {
 					if (itr.hasMoreTokens()) {
 						follower2.set(Long.parseLong(itr.nextToken()));
 						//if (follower2.compareTo(follower1) > 0) {
-						pair[0].set(follower1.get())
-						pair[1].set(follower2.get())
+						pair[0].set(follower1.get());
+						pair[1].set(follower2.get());
 						/*} else {
 							pair[0].set(follower2)
 							pair[1].set(follower1)
@@ -99,23 +100,18 @@ public class SecondTriangle {
 	}
 
 	public static void main(String[] args) throws Exception {
-		JobConf conf = new JobConf(new Configuration(), SecondTriangle.class);
-		conf.setJobName("13515029 second Triangle");
-		conf.setJarByClass(SecondTriangle.class);
-		FileSystem fs = FileSystem.get(conf);
+		Configuration conf = new Configuration();
+		Job job = Job.getInstance(conf, "13515029 second triangle");
+		job.setJarByClass(SecondTriangle.class);
+		MultipleInputs.addInputPath(job, new Path(args[0]), TextInputFormat.class, TokenizerMapper.class);
+		MultipleInputs.addInputPath(job, new Path(args[1]), TextInputFormat.class, TokenizerMapperTriplet.class);
+		job.setReducerClass(TriangleReducer.class);
 
-		MultipleInputs.addInputPath(conf, new Path(args[0]), TextInputFormat.class, TokenizerMapper.class);
-		MultipleInputs.addInputPath(conf, new Path(args[1]), TextInputFormat.class, TokenizerMapperTriplet.class);
-		conf.setReducerClass(TriangleReducer.class);
+		job.setOutputKeyClass(LongWritable.class);
+		job.setOutputValueClass(LongWritable[].class);
 
-		conf.setOutputKeyClass(LongWritable.class); 
-		conf.setOutputValueClass(LongWritable.class);
-
-		if (fs.exists(new Path(args[2]))) {
-			fs.delete(new Path(args[2]), true);
-		}
-
-		FileOutputFormat.setOutputPath(conf, new Path(args[2]));
-		System.exit(conf.waitForCompletion(true) ? 0 : 1);
+		FileInputFormat.addInputPath(job, new Path(args[0]));
+		FileOutputFormat.setOutputPath(job, new Path(args[1]));
+		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
 }

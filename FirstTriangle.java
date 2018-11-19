@@ -37,7 +37,8 @@ public class FirstTriangle {
 
 	public static class TripletReducer
 	extends Reducer<LongWritable,LongWritable,LongWritable,LongWritable[]> {
-		private LongWritable[] pair = new LongWritable()[2];
+		//private ArrayList<LongWritable> pair = new ArrayList<LongWritable>(2);
+		private LongWritable[] pair = new LongWritable[2];
 		private ArrayList<LongWritable> allConnected = new ArrayList<LongWritable>();
 		private LongWritable firstVal = new LongWritable();
 		private LongWritable secondVal = new LongWritable();
