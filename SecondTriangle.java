@@ -92,9 +92,13 @@ public class SecondTriangle {
 				}
 			}
 			if (isTriangle) {
+				long resultKey = 0;
+				long resultVal = 0;
 				for (int i = 0; i < allValues.size(); i++) {
+					resultKey = allValues.get(i).get();
+					resultVal = one.get();
 					//context.write(allValues.get(i),one);
-					context.write(Text(allValues.get(i).get().toString()),Text(one.get().toString()));
+					context.write(Text(resultKey.toString()),Text(resultVal.toString()));
 				}
 			}
 		}
@@ -108,8 +112,8 @@ public class SecondTriangle {
 		MultipleInputs.addInputPath(job, new Path(args[1]), TextInputFormat.class, TokenizerMapperTriplet.class);
 		job.setReducerClass(TriangleReducer.class);
 
-		job.setOutputKeyClass(LongWritable.class);
-		job.setOutputValueClass(LongWritable[].class);
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(Text.class);
 
 		FileInputFormat.addInputPath(job, new Path(args[0]));
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));
