@@ -53,7 +53,7 @@ public class FriendData {
 			
 			for (LongWritable foll : followers) {
 				//value.set(foll);
-				context.write(Text(key.get().toString()), Text(foll.get().toString()));
+				context.write(new Text(key.toString()), new Text(foll.toString()));
 			}
 		}
 	}

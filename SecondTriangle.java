@@ -98,7 +98,7 @@ public class SecondTriangle {
 					resultKey = allValues.get(i).get();
 					resultVal = one.get();
 					//context.write(allValues.get(i),one);
-					context.write(Text(resultKey.toString()),Text(resultVal.toString()));
+					context.write(new Text(Long.toString(resultKey)),new Text(Long.toString(resultVal)));
 				}
 			}
 		}

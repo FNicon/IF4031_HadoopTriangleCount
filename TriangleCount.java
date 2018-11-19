@@ -46,7 +46,7 @@ public class TriangleCount {
 			result.set(sum);
 			long resultKey = key.get();
 			long resultVal = result.get();
-			context.write(Text(resultKey.toString()), Text(resultVal.toString()));
+			context.write(new Text(Long.toString(resultKey)),new Text(Long.toString(resultVal)));
 		}
 	}
 

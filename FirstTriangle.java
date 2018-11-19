@@ -53,14 +53,16 @@ public class FirstTriangle {
 					for (int j = (i+1); j < allConnected.size(); j++) {
 						firstVal.set(allConnected.get(i).get());
 						secondVal.set(allConnected.get(j).get());
+						
+						
 						if (firstVal.compareTo(secondVal) < 0) {
 							pair[0].set(firstVal.get());
 							pair[1].set(secondVal.get());
-							context.write(Text(key.get().toString()), Text(pair[0].get().toString()+"\t"+pair[1].get().toString()));
+							context.write(new Text(key.toString()), new Text(pair[0].toString()+"\t"+pair[1].toString()));
 						} else if (firstVal.compareTo(secondVal) > 0) {
 							pair[0].set(secondVal.get());
 							pair[1].set(firstVal.get());
-							context.write(Text(key.get().toString()), Text(pair[0].get().toString()+"\t"+pair[1].get().toString()));
+							context.write(new Text(key.toString()), new Text(pair[0].toString()+"\t"+pair[1].toString()));
 							//context.write(key, pair);
 						}
 					}
