@@ -37,7 +37,7 @@ public class FriendData {
 	}
 
 	public static class ReduceUser
-	extends Reducer<LongWritable,LongWritable,LongWritable,LongWritable> {
+	extends Reducer<LongWritable,LongWritable,Text,Text> {
 		
 		public void reduce(LongWritable key, Iterable<LongWritable> values,
 		Context context
@@ -53,7 +53,7 @@ public class FriendData {
 			
 			for (LongWritable foll : followers) {
 				//value.set(foll);
-				context.write(key, foll);
+				context.write(Text(key.get().toString()), Text(foll.get().toString()));
 			}
 		}
 	}
@@ -66,8 +66,8 @@ public class FriendData {
 		job.setCombinerClass(ReduceUser.class);
 		job.setReducerClass(ReduceUser.class);
 
-		job.setOutputKeyClass(LongWritable.class);
-		job.setOutputValueClass(LongWritable.class);
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(Text.class);
 
 		FileInputFormat.addInputPath(job, new Path(args[0]));
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));
