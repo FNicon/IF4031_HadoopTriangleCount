@@ -20,13 +20,13 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class SecondTriangle {
 	public static class TokenizerMapper
-	extends Mapper<Object, Text, LongWritable[], LongWritable> {
+	extends Mapper<Text, Text, LongWritable[], LongWritable> {
 		private LongWritable[] pair = new LongWritable[2];
 		private LongWritable username = new LongWritable();
 		private LongWritable follower = new LongWritable();
 		private LongWritable empty = new LongWritable(-1);
 
-		public void map(Object key, Text value, Context context
+		public void map(Text key, Text value, Context context
 		) throws IOException, InterruptedException {
 			StringTokenizer itr = new StringTokenizer(value.toString());
 			while (itr.hasMoreTokens()) {
@@ -44,13 +44,13 @@ public class SecondTriangle {
 	}
 
 	public static class TokenizerMapperTriplet
-	extends Mapper<Object, Text, LongWritable[], LongWritable> {
+	extends Mapper<Text, Text, LongWritable[], LongWritable> {
 		private LongWritable[] pair = new LongWritable[2];
 		private LongWritable username = new LongWritable();
 		private LongWritable follower1 = new LongWritable();
 		private LongWritable follower2 = new LongWritable();
 
-		public void map(Object key, Text value, Context context
+		public void map(Text key, Text value, Context context
 		) throws IOException, InterruptedException {
 			StringTokenizer itr = new StringTokenizer(value.toString());
 			while (itr.hasMoreTokens()) {
@@ -74,7 +74,7 @@ public class SecondTriangle {
 	}
 
 	public static class TriangleReducer
-	extends Reducer<LongWritable[],LongWritable,LongWritable,LongWritable> {
+	extends Reducer<LongWritable[],LongWritable,Text,Text> {
 		//private LongWritable[] pair = new LongWritable()[2];
 		private LongWritable empty = new LongWritable(-1);
 		private LongWritable one = new LongWritable(1);
@@ -93,7 +93,8 @@ public class SecondTriangle {
 			}
 			if (isTriangle) {
 				for (int i = 0; i < allValues.size(); i++) {
-					context.write(allValues.get(i),one);
+					//context.write(allValues.get(i),one);
+					context.write(Text(allValues.get(i).get().toString()),Text(one.get().toString()));
 				}
 			}
 		}

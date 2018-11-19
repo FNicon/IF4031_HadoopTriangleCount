@@ -16,11 +16,11 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class FirstTriangle {
 	public static class TokenizerMapper
-	extends Mapper<Object, Text, LongWritable, LongWritable> {
+	extends Mapper<Text, Text, LongWritable, LongWritable> {
 		private LongWritable username = new LongWritable();
 		private LongWritable follower = new LongWritable();
 
-		public void map(Object key, Text value, Context context
+		public void map(Text key, Text value, Context context
 		) throws IOException, InterruptedException {
 			StringTokenizer itr = new StringTokenizer(value.toString());
 			while (itr.hasMoreTokens()) {
@@ -36,7 +36,7 @@ public class FirstTriangle {
 	}
 
 	public static class TripletReducer
-	extends Reducer<LongWritable,LongWritable,LongWritable,LongWritable[]> {
+	extends Reducer<LongWritable,LongWritable,Text,Text> {
 		//private ArrayList<LongWritable> pair = new ArrayList<LongWritable>(2);
 		private LongWritable[] pair = new LongWritable[2];
 		private ArrayList<LongWritable> allConnected = new ArrayList<LongWritable>();
@@ -56,11 +56,12 @@ public class FirstTriangle {
 						if (firstVal.compareTo(secondVal) < 0) {
 							pair[0].set(firstVal.get());
 							pair[1].set(secondVal.get());
-							context.write(key, pair);
+							context.write(Text(key.get().toString()), Text(pair[0].get().toString()+"\t"+pair[1].get().toString()));
 						} else if (firstVal.compareTo(secondVal) > 0) {
 							pair[0].set(secondVal.get());
 							pair[1].set(firstVal.get());
-							context.write(key, pair);
+							context.write(Text(key.get().toString()), Text(pair[0].get().toString()+"\t"+pair[1].get().toString()));
+							//context.write(key, pair);
 						}
 					}
 				}
@@ -76,8 +77,8 @@ public class FirstTriangle {
 		job.setCombinerClass(TripletReducer.class);
 		job.setReducerClass(TripletReducer.class);
 
-		job.setOutputKeyClass(LongWritable.class);
-		job.setOutputValueClass(LongWritable[].class);
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(Text.class);
 
 		FileInputFormat.addInputPath(job, new Path(args[0]));
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));
